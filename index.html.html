@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jeffrey Gandhi — AI Developer</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Share+Tech+Mono&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#020409;--c1:#00d4ff;--c2:#a855f7;--c3:#f97316;--c4:#00ff88;
+  --text:#cdd6f4;--muted:#45506a;--b1:rgba(0,212,255,.1);--b2:rgba(168,85,247,.12);
+}
+html,body{width:100%;height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;cursor:none}
+
+/* ── CURSOR ── */
+#cur{position:fixed;width:6px;height:6px;background:var(--c1);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);box-shadow:0 0 8px var(--c1)}
+#cur2{position:fixed;width:28px;height:28px;border:1px solid var(--c1);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);opacity:.4;transition:left .1s,top .1s}
+#cur3{position:fixed;width:52px;height:52px;border:1px solid rgba(0,212,255,.2);border-radius:50%;pointer-events:none;z-index:9997;transform:translate(-50%,-50%);opacity:.2;transition:left .18s,top .18s}
+
+/* ── LOADER ── */
+#loader{position:fixed;inset:0;background:var(--bg);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;transition:opacity 1s,visibility 1s}
+#loader.out{opacity:0;visibility:hidden}
+.ld-ring{position:relative;width:80px;height:80px;display:flex;align-items:center;justify-content:center}
+.ld-r1{position:absolute;inset:0;border:2px solid rgba(0,212,255,.1);border-top-color:var(--c1);border-radius:50%;animation:spin 1s linear infinite}
+.ld-r2{position:absolute;inset:8px;border:1px solid rgba(168,85,247,.1);border-bottom-color:var(--c2);border-radius:50%;animation:spin 1.5s linear infinite reverse}
+.ld-dot{width:8px;height:8px;background:var(--c1);border-radius:50%;box-shadow:0 0 12px var(--c1)}
+.ld-bar{width:260px;height:1px;background:rgba(0,212,255,.08);position:relative;overflow:hidden}
+.ld-bar::after{content:'';position:absolute;left:-60%;width:60%;height:100%;background:linear-gradient(90deg,transparent,var(--c1),transparent);animation:sweep 1.4s ease-in-out infinite}
+.ld-t1{font-family:'Orbitron',monospace;font-size:.75rem;letter-spacing:6px;color:var(--c1)}
+.ld-t2{font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:3px;color:var(--muted)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes sweep{to{left:160%}}
+
+/* ── BG ── */
+#bgc{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;justify-content:space-between;align-items:center;padding:1.2rem 4rem;background:rgba(2,4,9,.8);backdrop-filter:blur(20px);border-bottom:1px solid var(--b1)}
+.nav-id{font-family:'Orbitron',monospace;font-size:.8rem;color:var(--c1);letter-spacing:4px;display:flex;align-items:center;gap:.8rem}
+.nav-id::before{content:'';width:7px;height:7px;background:var(--c1);border-radius:50%;box-shadow:0 0 8px var(--c1);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:.4}50%{opacity:1}}
+.nav-links{display:flex;gap:0;list-style:none;border:1px solid var(--b1)}
+.nav-links li{border-right:1px solid var(--b1)}
+.nav-links li:last-child{border-right:none}
+.nav-btn{font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:3px;color:var(--muted);text-decoration:none;text-transform:uppercase;padding:.6rem 1.4rem;display:block;transition:all .3s;position:relative}
+.nav-btn.active{color:var(--c1);background:rgba(0,212,255,.06)}
+.nav-btn::after{content:'';position:absolute;bottom:0;left:0;width:0;height:1px;background:var(--c1);transition:width .3s}
+.nav-btn:hover::after,.nav-btn.active::after{width:100%}
+.nav-btn:hover{color:var(--c1)}
+.nav-hire{font-family:'Orbitron',monospace;font-size:.62rem;padding:.55rem 1.4rem;border:1px solid var(--c1);color:var(--c1);text-decoration:none;letter-spacing:3px;transition:all .3s;overflow:hidden;position:relative}
+.nav-hire::before{content:'';position:absolute;inset:0;background:var(--c1);transform:scaleX(0);transform-origin:left;transition:transform .3s;z-index:-1}
+.nav-hire:hover{color:var(--bg)}
+.nav-hire:hover::before{transform:scaleX(1)}
+
+/* ── PAGE SYSTEM ── */
+#pages{position:fixed;top:0;left:0;width:100%;height:100%;z-index:1}
+.page{position:absolute;inset:0;overflow-y:auto;overflow-x:hidden;transition:opacity .7s cubic-bezier(.4,0,.2,1),transform .7s cubic-bezier(.4,0,.2,1);opacity:0;pointer-events:none;transform:translateX(60px)}
+.page.active{opacity:1;pointer-events:all;transform:translateX(0)}
+.page.prev{opacity:0;transform:translateX(-60px)}
+.page-inner{min-height:100vh;padding:7rem 4rem 4rem}
+
+/* page progress dots */
+.pg-dots{position:fixed;right:2rem;top:50%;transform:translateY(-50%);z-index:150;display:flex;flex-direction:column;gap:.8rem}
+.pg-dot{width:6px;height:6px;border-radius:50%;border:1px solid var(--muted);cursor:pointer;transition:all .3s;background:transparent}
+.pg-dot.active{background:var(--c1);border-color:var(--c1);box-shadow:0 0 8px var(--c1)}
+.pg-dot:hover{border-color:var(--c1)}
+
+/* page arrows */
+.pg-arrow{position:fixed;z-index:150;font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:3px;color:var(--muted);cursor:pointer;transition:all .3s;display:flex;align-items:center;gap:.5rem;background:rgba(2,4,9,.6);backdrop-filter:blur(10px);padding:.7rem 1.2rem;border:1px solid var(--b1)}
+.pg-arrow:hover{color:var(--c1);border-color:var(--c1)}
+#pgNext{bottom:2.5rem;left:50%;transform:translateX(-50%)}
+#pgPrev{top:50%;right:4rem;transform:translateY(-50%) rotate(-90deg);display:none}
+
+/* ─────────────────────────────────────────
+   PAGE 1 — PRESENTATION
+───────────────────────────────────────── */
+#p1 .inner{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:4rem;min-height:calc(100vh - 8rem)}
+.p1-left{}
+.p1-sys{font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--c1);letter-spacing:5px;margin-bottom:1.8rem;display:flex;align-items:center;gap:.8rem;opacity:0;animation:fup .7s forwards .2s}
+.p1-sys::before{content:'//';color:var(--muted)}
+.p1-name{font-family:'Orbitron',monospace;font-weight:900;line-height:.9;margin-bottom:1.5rem;opacity:0;animation:fup .7s forwards .4s}
+.p1-name .n1{font-size:clamp(3.5rem,6vw,6rem);color:var(--text);display:block}
+.p1-name .n2{font-size:clamp(3.5rem,6vw,6rem);-webkit-text-stroke:1.5px var(--c1);color:transparent;display:block}
+.p1-role{font-family:'Share Tech Mono',monospace;font-size:.95rem;color:var(--c2);letter-spacing:4px;margin-bottom:1.5rem;opacity:0;animation:fup .7s forwards .6s}
+.p1-bio{font-size:.95rem;color:var(--muted);line-height:1.9;max-width:460px;margin-bottom:2.5rem;opacity:0;animation:fup .7s forwards .8s}
+.p1-info{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:2.5rem;opacity:0;animation:fup .7s forwards 1s}
+.p1-info-item{border:1px solid var(--b1);padding:1rem;background:rgba(0,212,255,.02)}
+.p1-info-label{font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:.3rem}
+.p1-info-val{font-family:'Orbitron',monospace;font-size:.8rem;color:var(--c1)}
+.p1-btns{display:flex;gap:1rem;opacity:0;animation:fup .7s forwards 1.2s}
+.pb1{padding:.9rem 2rem;background:var(--c1);color:var(--bg);font-family:'Orbitron',monospace;font-size:.65rem;letter-spacing:3px;text-decoration:none;font-weight:700;transition:all .3s;clip-path:polygon(0 0,calc(100% - 10px) 0,100% 10px,100% 100%,10px 100%,0 calc(100% - 10px))}
+.pb1:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,212,255,.4)}
+.pb2{padding:.9rem 2rem;border:1px solid var(--b2);color:var(--c2);font-family:'Orbitron',monospace;font-size:.65rem;letter-spacing:3px;text-decoration:none;transition:all .3s}
+.pb2:hover{border-color:var(--c2);transform:translateY(-3px)}
+
+/* p1 right — HUD */
+#hudCv{width:100%;height:520px;display:block;opacity:0;animation:fadein 1.2s forwards 1.4s}
+
+/* exp cards on p1 */
+.p1-exp{margin-top:4rem}
+.p1-exp-title{font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--c1);letter-spacing:3px;margin-bottom:2rem;padding-bottom:.8rem;border-bottom:1px solid var(--b1);display:flex;align-items:center;gap:1rem}
+.p1-exp-title::before{content:'//';font-family:'Share Tech Mono';color:var(--muted)}
+.p1-exp-grid{display:grid;gap:1.2rem}
+.p1-ec{border:1px solid var(--b1);padding:1.5rem 1.5rem 1.5rem 2rem;position:relative;transition:all .4s;background:rgba(0,212,255,.01)}
+.p1-ec::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--c1);transform:scaleY(0);transform-origin:bottom;transition:transform .4s}
+.p1-ec:hover::before{transform:scaleY(1)}
+.p1-ec:hover{border-color:rgba(0,212,255,.3);background:rgba(0,212,255,.03)}
+.p1-ec-head{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap;margin-bottom:.8rem}
+.p1-ec-role{font-family:'Orbitron',monospace;font-size:.9rem;font-weight:700}
+.p1-ec-co{color:var(--c1);font-family:'Share Tech Mono',monospace;font-size:.78rem;letter-spacing:2px;margin-top:.2rem}
+.p1-ec-dt{font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--muted);border:1px solid var(--b1);padding:.2rem .7rem;white-space:nowrap}
+.p1-ec-li{list-style:none}
+.p1-ec-li li{font-size:.82rem;color:var(--muted);padding:.2rem 0 .2rem 1.1rem;position:relative;line-height:1.6}
+.p1-ec-li li::before{content:'›';position:absolute;left:0;color:var(--c1)}
+
+/* ─────────────────────────────────────────
+   PAGE 2 — SKILLS
+───────────────────────────────────────── */
+.p2-top-tag{font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:6px;color:var(--c1);margin-bottom:.8rem;display:flex;align-items:center;gap:.8rem}
+.p2-top-tag::before{content:'//';color:var(--muted)}
+.p2-title{font-family:'Orbitron',monospace;font-size:clamp(2rem,3.5vw,3rem);font-weight:700;margin-bottom:3rem}
+.p2-grid{display:grid;grid-template-columns:1fr 1fr;gap:3rem;align-items:start}
+.p2-left{display:grid;gap:1.5rem}
+.sp{border:1px solid var(--b1);padding:1.8rem;background:rgba(0,212,255,.01);position:relative;overflow:hidden;transition:border-color .4s}
+.sp::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--c1),transparent);transform:scaleX(0);transition:transform .5s}
+.sp:hover::after{transform:scaleX(1)}
+.sp:hover{border-color:rgba(0,212,255,.25)}
+.sp-h{display:flex;align-items:center;gap:.8rem;margin-bottom:1.4rem}
+.sp-ico{font-size:1rem;color:var(--c1)}
+.sp-nm{font-family:'Orbitron',monospace;font-size:.75rem;color:var(--c1);letter-spacing:2px}
+.sb-row{display:flex;align-items:center;gap:.8rem;margin-bottom:.75rem}
+.sb-lbl{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--muted);width:140px;flex-shrink:0;letter-spacing:1px}
+.sb-track{flex:1;height:3px;background:rgba(255,255,255,.04);overflow:hidden;position:relative}
+.sb-fill{height:100%;width:0;transition:width 1.2s cubic-bezier(.16,1,.3,1)}
+.sb-fill::after{content:'';position:absolute;right:0;top:-3px;width:6px;height:9px;background:inherit;clip-path:polygon(0 0,100% 50%,0 100%)}
+.sb-v{font-family:'Share Tech Mono',monospace;font-size:.58rem;color:var(--c1);width:28px;text-align:right;flex-shrink:0}
+.p2-right{position:sticky;top:2rem;display:grid;gap:1.5rem}
+#radarCv{width:100%;border:1px solid var(--b1);background:rgba(0,212,255,.015);display:block}
+.cert-box{border:1px solid var(--b2);padding:1.5rem;background:rgba(168,85,247,.01)}
+.cert-box-t{font-family:'Orbitron',monospace;font-size:.72rem;color:var(--c2);letter-spacing:3px;margin-bottom:1.2rem}
+.certs{display:flex;flex-wrap:wrap;gap:.6rem}
+.cchip{font-family:'Share Tech Mono',monospace;font-size:.6rem;padding:.3rem .8rem;border:1px solid var(--b2);color:var(--c2);letter-spacing:1px;transition:all .25s;cursor:default}
+.cchip:hover{background:rgba(168,85,247,.1);border-color:var(--c2)}
+.lang-box{border:1px solid var(--b1);padding:1.5rem;display:flex;gap:1rem}
+.lang-item{flex:1;text-align:center;border:1px solid var(--b1);padding:1rem}
+.lang-name{font-family:'Orbitron',monospace;font-size:.8rem;color:var(--text);margin-bottom:.3rem}
+.lang-level{font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--c1);letter-spacing:2px}
+
+/* ─────────────────────────────────────────
+   PAGE 3 — PROJECTS
+───────────────────────────────────────── */
+.p3-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.8rem}
+.pc{border:1px solid var(--b1);background:rgba(0,0,0,.5);overflow:hidden;transition:all .4s;position:relative}
+.pc:hover{border-color:rgba(0,212,255,.4);transform:translateY(-8px);box-shadow:0 24px 60px rgba(0,0,0,.7),0 0 40px rgba(0,212,255,.04)}
+.pc-vis{height:190px;position:relative;overflow:hidden}
+.pc-cv{width:100%;height:190px;display:block}
+/* HUD corners */
+.pc-vis::before,.pc-vis::after{content:'';position:absolute;width:18px;height:18px;z-index:2}
+.pc-vis::before{top:8px;left:8px;border-top:1px solid var(--c1);border-left:1px solid var(--c1);opacity:.5}
+.pc-vis::after{bottom:8px;right:8px;border-bottom:1px solid var(--c1);border-right:1px solid var(--c1);opacity:.5}
+.pc-tag{position:absolute;top:8px;right:8px;font-family:'Share Tech Mono',monospace;font-size:.5rem;letter-spacing:2px;color:var(--c1);background:rgba(0,212,255,.08);border:1px solid var(--b1);padding:.2rem .5rem;z-index:3}
+.pc-scan{position:absolute;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--c1),transparent);animation:scanv 3s linear infinite;opacity:.35;z-index:2}
+@keyframes scanv{from{top:0}to{top:100%}}
+.pc-body{padding:1.4rem}
+.pc-num{font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:3px;color:var(--muted);margin-bottom:.5rem}
+.pc-title{font-family:'Orbitron',monospace;font-size:.9rem;font-weight:700;margin-bottom:.6rem}
+.pc-desc{font-size:.8rem;color:var(--muted);line-height:1.7;margin-bottom:.9rem}
+.pc-tags{display:flex;flex-wrap:wrap;gap:.35rem;margin-bottom:.9rem}
+.ptg{font-family:'Share Tech Mono',monospace;font-size:.56rem;padding:.2rem .5rem;background:rgba(0,212,255,.04);border:1px solid var(--b1);color:var(--c1);letter-spacing:1px}
+.pc-lnk{font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--c1);text-decoration:none;letter-spacing:2px;border-bottom:1px solid var(--b1);padding-bottom:2px;transition:border-color .2s,letter-spacing .2s}
+.pc-lnk:hover{border-color:var(--c1);letter-spacing:3px}
+
+/* EDU on p3 */
+.p3-edu{margin-top:4rem}
+.p3-edu-title{font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--c2);letter-spacing:3px;margin-bottom:2rem;padding-bottom:.8rem;border-bottom:1px solid var(--b2);display:flex;align-items:center;gap:1rem}
+.p3-edu-title::before{content:'//';font-family:'Share Tech Mono';color:var(--muted)}
+.edu-cards{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+.edu-c{border:1px solid var(--b2);padding:2rem;transition:all .4s;position:relative;overflow:hidden}
+.edu-c::after{content:'';position:absolute;top:0;right:0;width:0;height:0;border-top:40px solid rgba(168,85,247,.06);border-left:40px solid transparent;transition:border-width .4s}
+.edu-c:hover::after{border-top-width:60px;border-left-width:60px}
+.edu-c:hover{border-color:rgba(168,85,247,.3);transform:translateY(-4px)}
+.edu-deg{font-family:'Orbitron',monospace;font-size:.95rem;font-weight:700;margin-bottom:.4rem}
+.edu-sch{color:var(--c2);font-family:'Share Tech Mono',monospace;letter-spacing:2px;font-size:.8rem;margin-bottom:.4rem}
+.edu-dt{font-family:'Share Tech Mono',monospace;font-size:.62rem;color:var(--muted)}
+.edu-wv{width:100%;height:50px;display:block;margin-top:1rem;opacity:.5}
+
+/* CONTACT on p3 */
+.p3-contact{margin-top:4rem;text-align:center;position:relative;padding:4rem 2rem;border:1px solid var(--b1);overflow:hidden}
+#ctcCv{position:absolute;inset:0;z-index:0;pointer-events:none}
+.ctc-in{position:relative;z-index:1}
+.ctc-lbl{font-family:'Share Tech Mono',monospace;font-size:.65rem;letter-spacing:5px;color:var(--c1);margin-bottom:1rem}
+.ctc-big{font-family:'Orbitron',monospace;font-size:clamp(1.8rem,4vw,3.5rem);font-weight:900;line-height:1.1;margin-bottom:1rem}
+.ctc-big .gh{-webkit-text-stroke:1px var(--c1);color:transparent}
+.ctc-sub{font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:4px;color:var(--muted);margin-bottom:2rem}
+.ctc-email{font-family:'Share Tech Mono',monospace;font-size:.9rem;color:var(--c1);display:inline-block;text-decoration:none;border-bottom:1px solid var(--b1);padding-bottom:.6rem;margin-bottom:2rem;letter-spacing:2px;transition:opacity .3s}
+.ctc-email:hover{opacity:.6}
+.soc-row{display:flex;justify-content:center;gap:1rem;flex-wrap:wrap}
+.soc-a{font-family:'Share Tech Mono',monospace;font-size:.62rem;padding:.6rem 1.4rem;border:1px solid var(--b1);color:var(--muted);text-decoration:none;letter-spacing:2px;transition:all .3s;text-transform:uppercase;position:relative;overflow:hidden}
+.soc-a::before{content:'';position:absolute;inset:0;background:var(--c1);transform:scaleX(0);transform-origin:left;transition:transform .3s;z-index:-1}
+.soc-a:hover{color:var(--bg);border-color:var(--c1)}
+.soc-a:hover::before{transform:scaleX(1)}
+
+/* ── UTILS ── */
+@keyframes fup{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+
+/* RESPONSIVE */
+@media(max-width:1100px){
+  .p1-inner,.p2-grid{grid-template-columns:1fr}
+  #hudCv{display:none}
+  .p3-grid{grid-template-columns:1fr 1fr}
+  .p2-right{position:static}
+}
+@media(max-width:768px){
+  nav{padding:1rem 1.5rem}
+  .nav-links{display:none}
+  .page-inner{padding:5rem 1.5rem 3rem}
+  .p3-grid,.edu-cards{grid-template-columns:1fr}
+  .p1-info{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="ld-ring"><div class="ld-r1"></div><div class="ld-r2"></div><div class="ld-dot"></div></div>
+  <div class="ld-t1">LOADING SYSTEM</div>
+  <div class="ld-bar"></div>
+  <div class="ld-t2">J.GANDHI // AI DEVELOPER // v4.0</div>
+</div>
+
+<!-- CURSORS -->
+<div id="cur"></div><div id="cur2"></div><div id="cur3"></div>
+
+<!-- BG -->
+<canvas id="bgc"></canvas>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-id">JG.EXE <span style="color:var(--muted);font-size:.65rem;letter-spacing:2px;font-family:'Share Tech Mono'">AI DEVELOPER</span></div>
+  <ul class="nav-links">
+    <li><a class="nav-btn active" data-pg="0" href="#">01 // PROFILE</a></li>
+    <li><a class="nav-btn" data-pg="1" href="#">02 // SKILLS</a></li>
+    <li><a class="nav-btn" data-pg="2" href="#">03 // PROJECTS</a></li>
+  </ul>
+  <a href="mailto:ngouonpejeffrey16@gmail.com" class="nav-hire">HIRE ME</a>
+</nav>
+
+<!-- PAGE DOTS -->
+<div class="pg-dots">
+  <div class="pg-dot active" data-pg="0"></div>
+  <div class="pg-dot" data-pg="1"></div>
+  <div class="pg-dot" data-pg="2"></div>
+</div>
+
+<!-- PAGE NEXT ARROW -->
+<div class="pg-arrow" id="pgNext">NEXT PAGE ↓</div>
+
+<!-- ═══════════════════════════════════════
+     PAGE 1 — PROFILE / PRESENTATION
+═══════════════════════════════════════ -->
+<div id="pages">
+
+<div class="page active" id="p1">
+<div class="page-inner">
+  <div class="inner" style="display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:3rem;min-height:calc(100vh - 14rem)">
+
+    <div class="p1-left">
+      <div class="p1-sys">UNIT_001 // LYON, FRANCE // ACTIVE</div>
+      <div class="p1-name">
+        <span class="n1">JEFFREY</span>
+        <span class="n2">GANDHI</span>
+      </div>
+      <div class="p1-role">[ AI DEVELOPER / AUTOMATION / CLOUD ]</div>
+      <p class="p1-bio">AI Developer with hands-on experience in workflow automation, intelligent agents and API development. Making AI easy and doing cloud computing — seeking a 4-month internship in Europe starting September 2026.</p>
+      <div class="p1-info">
+        <div class="p1-info-item"><div class="p1-info-label">Location</div><div class="p1-info-val">Lyon, France</div></div>
+        <div class="p1-info-item"><div class="p1-info-label">Status</div><div class="p1-info-val" style="color:var(--c4)">Open to Work</div></div>
+        <div class="p1-info-item"><div class="p1-info-label">Education</div><div class="p1-info-val">MSc AI — CESI</div></div>
+        <div class="p1-info-item"><div class="p1-info-label">Availability</div><div class="p1-info-val">Sep 2026</div></div>
+      </div>
+      <div class="p1-btns">
+        <a href="mailto:ngouonpejeffrey16@gmail.com" class="pb1">CONTACT ME</a>
+        <a href="https://github.com/ngouonpejeffrey16-tech" target="_blank" class="pb2">GITHUB</a>
+      </div>
+    </div>
+
+    <div style="opacity:0;animation:fadein 1.2s forwards 1.4s">
+      <canvas id="hudCv" width="520" height="520"></canvas>
+    </div>
+
+  </div>
+
+  <!-- EXPERIENCE -->
+  <div class="p1-exp">
+    <div class="p1-exp-title">Professional Experience</div>
+    <div class="p1-exp-grid">
+
+      <div class="p1-ec">
+        <div class="p1-ec-head">
+          <div><div class="p1-ec-role">AI Developer</div><div class="p1-ec-co">MITCHIE S.A</div></div>
+          <div class="p1-ec-dt">JAN 2026 – APR 2026</div>
+        </div>
+        <ul class="p1-ec-li">
+          <li>Automated workflows using n8n and Groq AI integration</li>
+          <li>Developed JSON-RPC APIs and conflict detection algorithms</li>
+          <li>Built automated reporting and optimized organizational processes</li>
+        </ul>
+      </div>
+
+      <div class="p1-ec">
+        <div class="p1-ec-head">
+          <div><div class="p1-ec-role">AI Developer</div><div class="p1-ec-co">SMART TEEM — France</div></div>
+          <div class="p1-ec-dt">JUN 2025 – AUG 2025</div>
+        </div>
+        <ul class="p1-ec-li">
+          <li>Developed intelligent Python-based AI agents</li>
+          <li>Built automation scripts and managed Azure databases</li>
+          <li>Integrated Microsoft Teams API for internal tooling</li>
+        </ul>
+      </div>
+
+      <div class="p1-ec">
+        <div class="p1-ec-head">
+          <div><div class="p1-ec-role">Application Developer</div><div class="p1-ec-co">GROUP CADYST — DANONE France</div></div>
+          <div class="p1-ec-dt">JAN 2024 – MAR 2024</div>
+        </div>
+        <ul class="p1-ec-li">
+          <li>Container tracking app with real-time monitoring for Cameroon shipments</li>
+          <li>Integrated GMC API to automate weekly container status updates</li>
+          <li>Managed end-to-end supply chain coordination</li>
+        </ul>
+      </div>
+
+      <div class="p1-ec">
+        <div class="p1-ec-head">
+          <div><div class="p1-ec-role">Industrial Mechanic</div><div class="p1-ec-co">PANZANI — France</div></div>
+          <div class="p1-ec-dt">JUL 2023 – AUG 2023</div>
+        </div>
+        <ul class="p1-ec-li">
+          <li>Mechanical and electrical maintenance and process documentation</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+</div><!-- /page-inner -->
+</div><!-- /p1 -->
+
+<!-- ═══════════════════════════════════════
+     PAGE 2 — SKILLS HUD
+═══════════════════════════════════════ -->
+<div class="page" id="p2">
+<div class="page-inner">
+  <div class="p2-top-tag">Capabilities</div>
+  <h2 class="p2-title">Skills HUD</h2>
+  <div class="p2-grid">
+
+    <div class="p2-left">
+      <div class="sp">
+        <div class="sp-h"><span class="sp-ico">⬡</span><span class="sp-nm">AI / Machine Learning</span></div>
+        <div class="sb-row"><span class="sb-lbl">AI Agents</span><div class="sb-track"><div class="sb-fill" data-w="90" style="background:var(--c1)"></div></div><span class="sb-v">90%</span></div>
+        <div class="sb-row"><span class="sb-lbl">Machine Learning</span><div class="sb-track"><div class="sb-fill" data-w="88" style="background:var(--c1)"></div></div><span class="sb-v">88%</span></div>
+        <div class="sb-row"><span class="sb-lbl">NLP / LLM</span><div class="sb-track"><div class="sb-fill" data-w="85" style="background:var(--c1)"></div></div><span class="sb-v">85%</span></div>
+        <div class="sb-row"><span class="sb-lbl">RAG Systems</span><div class="sb-track"><div class="sb-fill" data-w="78" style="background:var(--c1)"></div></div><span class="sb-v">78%</span></div>
+        <div class="sb-row"><span class="sb-lbl">Computer Vision</span><div class="sb-track"><div class="sb-fill" data-w="74" style="background:var(--c1)"></div></div><span class="sb-v">74%</span></div>
+        <div class="sb-row"><span class="sb-lbl">MLOps</span><div class="sb-track"><div class="sb-fill" data-w="72" style="background:var(--c1)"></div></div><span class="sb-v">72%</span></div>
+      </div>
+      <div class="sp">
+        <div class="sp-h"><span class="sp-ico">⬢</span><span class="sp-nm">Engineering Stack</span></div>
+        <div class="sb-row"><span class="sb-lbl">Python</span><div class="sb-track"><div class="sb-fill" data-w="92" style="background:var(--c2)"></div></div><span class="sb-v">92%</span></div>
+        <div class="sb-row"><span class="sb-lbl">N8N Automation</span><div class="sb-track"><div class="sb-fill" data-w="88" style="background:var(--c2)"></div></div><span class="sb-v">88%</span></div>
+        <div class="sb-row"><span class="sb-lbl">API Development</span><div class="sb-track"><div class="sb-fill" data-w="86" style="background:var(--c2)"></div></div><span class="sb-v">86%</span></div>
+        <div class="sb-row"><span class="sb-lbl">SQL / PostgreSQL</span><div class="sb-track"><div class="sb-fill" data-w="82" style="background:var(--c2)"></div></div><span class="sb-v">82%</span></div>
+        <div class="sb-row"><span class="sb-lbl">Azure Cloud</span><div class="sb-track"><div class="sb-fill" data-w="80" style="background:var(--c2)"></div></div><span class="sb-v">80%</span></div>
+        <div class="sb-row"><span class="sb-lbl">Git / Linux</span><div class="sb-track"><div class="sb-fill" data-w="85" style="background:var(--c2)"></div></div><span class="sb-v">85%</span></div>
+      </div>
+      <div class="sp">
+        <div class="sp-h"><span class="sp-ico">⬣</span><span class="sp-nm">Security & Data</span></div>
+        <div class="sb-row"><span class="sb-lbl">Data Engineering</span><div class="sb-track"><div class="sb-fill" data-w="76" style="background:var(--c3)"></div></div><span class="sb-v">76%</span></div>
+        <div class="sb-row"><span class="sb-lbl">Power BI</span><div class="sb-track"><div class="sb-fill" data-w="74" style="background:var(--c3)"></div></div><span class="sb-v">74%</span></div>
+        <div class="sb-row"><span class="sb-lbl">Cybersecurity</span><div class="sb-track"><div class="sb-fill" data-w="70" style="background:var(--c3)"></div></div><span class="sb-v">70%</span></div>
+        <div class="sb-row"><span class="sb-lbl">Snowflake</span><div class="sb-track"><div class="sb-fill" data-w="68" style="background:var(--c3)"></div></div><span class="sb-v">68%</span></div>
+      </div>
+    </div>
+
+    <div class="p2-right">
+      <canvas id="radarCv" width="380" height="380"></canvas>
+      <div class="cert-box">
+        <div class="cert-box-t">[ CERTIFICATIONS ]</div>
+        <div class="certs">
+          <span class="cchip">Microsoft SC-900</span>
+          <span class="cchip">Microsoft AI-900</span>
+          <span class="cchip">Microsoft AZ-900</span>
+          <span class="cchip">Scrum</span>
+          <span class="cchip">GDPR</span>
+        </div>
+      </div>
+      <div class="lang-box">
+        <div class="lang-item"><div class="lang-name">FRENCH</div><div class="lang-level">C2 — NATIVE</div></div>
+        <div class="lang-item"><div class="lang-name">ENGLISH</div><div class="lang-level">C2 — NATIVE</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</div><!-- /p2 -->
+
+<!-- ═══════════════════════════════════════
+     PAGE 3 — PROJECTS + EDU + CONTACT
+═══════════════════════════════════════ -->
+<div class="page" id="p3">
+<div class="page-inner">
+
+  <div class="p2-top-tag">Deployments</div>
+  <h2 class="p2-title">Projects</h2>
+
+  <div class="p3-grid">
+    <div class="pc">
+      <div class="pc-vis"><canvas class="pc-cv" data-vis="proptech"></canvas><div class="pc-tag">PROPTECH</div><div class="pc-scan"></div></div>
+      <div class="pc-body">
+        <div class="pc-num">PROJECT_01</div><div class="pc-title">TIMBER TRACE</div>
+        <p class="pc-desc">Land selling platform — real-time property monitoring, listings and sales workflow automation.</p>
+        <div class="pc-tags"><span class="ptg">App Dev</span><span class="ptg">PropTech</span><span class="ptg">Platform</span></div>
+        <a href="https://github.com/ngouonpejeffrey16-tech/TIMBER_TRACE" target="_blank" class="pc-lnk">GITHUB ›</a>
+      </div>
+    </div>
+    <div class="pc">
+      <div class="pc-vis"><canvas class="pc-cv" data-vis="cocktail"></canvas><div class="pc-tag">WEB</div><div class="pc-scan"></div></div>
+      <div class="pc-body">
+        <div class="pc-num">PROJECT_02</div><div class="pc-title">VOLATIL MIXOLOGY</div>
+        <p class="pc-desc">Cocktail website in pure HTML/CSS — stylish frontend with focus on layout and UI design.</p>
+        <div class="pc-tags"><span class="ptg">HTML</span><span class="ptg">CSS</span><span class="ptg">Frontend</span></div>
+        <a href="https://github.com/ngouonpejeffrey16-tech/volatil-mixology" target="_blank" class="pc-lnk">GITHUB ›</a>
+      </div>
+    </div>
+    <div class="pc">
+      <div class="pc-vis"><canvas class="pc-cv" data-vis="aiflow"></canvas><div class="pc-tag">AUTOMATION</div><div class="pc-scan"></div></div>
+      <div class="pc-body">
+        <div class="pc-num">PROJECT_03</div><div class="pc-title">AI WORKFLOW ENGINE</div>
+        <p class="pc-desc">N8N + Groq AI automation. JSON-RPC APIs, conflict detection algorithms, intelligent reporting.</p>
+        <div class="pc-tags"><span class="ptg">N8N</span><span class="ptg">Groq AI</span><span class="ptg">JSON-RPC</span></div>
+        <a href="https://github.com/ngouonpejeffrey16-tech" target="_blank" class="pc-lnk">PROFILE ›</a>
+      </div>
+    </div>
+    <div class="pc">
+      <div class="pc-vis"><canvas class="pc-cv" data-vis="publish"></canvas><div class="pc-tag">PUBLISHING</div><div class="pc-scan"></div></div>
+      <div class="pc-body">
+        <div class="pc-num">PROJECT_04</div><div class="pc-title">HARRY PROJECT</div>
+        <p class="pc-desc">Publication page — polished content layout, typography and user-friendly presentation.</p>
+        <div class="pc-tags"><span class="ptg">Web</span><span class="ptg">Publishing</span><span class="ptg">UI/UX</span></div>
+        <a href="https://github.com/ngouonpejeffrey16-tech/HARRY-PROJECT" target="_blank" class="pc-lnk">GITHUB ›</a>
+      </div>
+    </div>
+    <div class="pc">
+      <div class="pc-vis"><canvas class="pc-cv" data-vis="logistics"></canvas><div class="pc-tag">LOGISTICS</div><div class="pc-scan"></div></div>
+      <div class="pc-body">
+        <div class="pc-num">PROJECT_05</div><div class="pc-title">CONTAINER TRACKER</div>
+        <p class="pc-desc">Real-time shipping tracker for Cameroon routes at DANONE. GMC API automated status updates.</p>
+        <div class="pc-tags"><span class="ptg">GMC API</span><span class="ptg">Real-time</span><span class="ptg">Supply Chain</span></div>
+        <a href="https://github.com/ngouonpejeffrey16-tech" target="_blank" class="pc-lnk">PROFILE ›</a>
+      </div>
+    </div>
+    <div class="pc">
+      <div class="pc-vis"><canvas class="pc-cv" data-vis="startup"></canvas><div class="pc-tag">STARTUP</div><div class="pc-scan"></div></div>
+      <div class="pc-body">
+        <div class="pc-num">PROJECT_06</div><div class="pc-title">JEFFREY EVENTS</div>
+        <p class="pc-desc">Event management startup — registration platform and logistics engine built from scratch.</p>
+        <div class="pc-tags"><span class="ptg">Full-Stack</span><span class="ptg">Startup</span><span class="ptg">Logistics</span></div>
+        <a href="https://github.com/ngouonpejeffrey16-tech" target="_blank" class="pc-lnk">PROFILE ›</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDUCATION -->
+  <div class="p3-edu">
+    <div class="p3-edu-title">Education</div>
+    <div class="edu-cards">
+      <div class="edu-c">
+        <div class="edu-deg">Master's in Computer Science</div>
+        <div class="edu-sch">AI & DATA ANALYTICS — CESI LYON</div>
+        <div class="edu-dt">AUG 2025 – JUL 2028</div>
+        <canvas class="edu-wv" data-t="c1" width="300" height="50"></canvas>
+      </div>
+      <div class="edu-c">
+        <div class="edu-deg">Bachelor of Science</div>
+        <div class="edu-sch">ICAM TOULOUSE</div>
+        <div class="edu-dt">SEP 2023 – JUN 2025</div>
+        <canvas class="edu-wv" data-t="c2" width="300" height="50"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTACT -->
+  <div class="p3-contact">
+    <canvas id="ctcCv"></canvas>
+    <div class="ctc-in">
+      <div class="ctc-lbl">// OPEN TO OPPORTUNITIES</div>
+      <h2 class="ctc-big">LET'S BUILD<br><span class="gh">THE FUTURE</span></h2>
+      <p class="ctc-sub">INTERNSHIP // EUROPE // SEPTEMBER 2026</p>
+      <a href="mailto:ngouonpejeffrey16@gmail.com" class="ctc-email">ngouonpejeffrey16@gmail.com</a>
+      <div class="soc-row">
+        <a href="https://www.linkedin.com/in/ngouonpe-jeffrey-48693a378" target="_blank" class="soc-a">LinkedIn</a>
+        <a href="https://github.com/ngouonpejeffrey16-tech" target="_blank" class="soc-a">GitHub</a>
+        <a href="tel:+33753110372" class="soc-a">+33 7 53 11 03 72</a>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div><!-- /p3 -->
+
+</div><!-- /pages -->
+
+<script>
+/* ─── CURSOR ─── */
+const C=document.getElementById('cur'),C2=document.getElementById('cur2'),C3=document.getElementById('cur3');
+let MX=0,MY=0;
+document.addEventListener('mousemove',e=>{MX=e.clientX;MY=e.clientY;C.style.left=MX+'px';C.style.top=MY+'px';});
+setInterval(()=>{C2.style.left=MX+'px';C2.style.top=MY+'px';},80);
+setInterval(()=>{C3.style.left=MX+'px';C3.style.top=MY+'px';},150);
+document.querySelectorAll('a,button').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{C.style.width='14px';C.style.height='14px';C2.style.width='44px';C2.style.height='44px';});
+  el.addEventListener('mouseleave',()=>{C.style.width='6px';C.style.height='6px';C2.style.width='28px';C2.style.height='28px';});
+});
+
+/* ─── PAGE SYSTEM ─── */
+let curPg=0;const TOTAL=3;
+const pages=document.querySelectorAll('.page');
+const dots=document.querySelectorAll('.pg-dot');
+const navBtns=document.querySelectorAll('.nav-btn');
+const pgNext=document.getElementById('pgNext');
+
+function goTo(n){
+  if(n===curPg)return;
+  const prev=curPg;curPg=n;
+  pages[prev].classList.remove('active');pages[prev].classList.add('prev');
+  setTimeout(()=>pages[prev].classList.remove('prev'),700);
+  pages[curPg].classList.add('active');
+  // scroll to top of new page
+  pages[curPg].scrollTop=0;
+  dots.forEach((d,i)=>d.classList.toggle('active',i===curPg));
+  navBtns.forEach((b,i)=>b.classList.toggle('active',i===curPg));
+  pgNext.textContent=curPg===TOTAL-1?'BACK TO TOP ↑':'NEXT PAGE ↓';
+  // trigger skill bars on p2
+  if(curPg===1)triggerBars();
+}
+pgNext.addEventListener('click',()=>{
+  if(curPg===TOTAL-1)goTo(0);else goTo(curPg+1);
+});
+dots.forEach(d=>d.addEventListener('click',()=>goTo(+d.dataset.pg)));
+navBtns.forEach(b=>b.addEventListener('click',e=>{e.preventDefault();goTo(+b.dataset.pg);}));
+
+// Keyboard nav
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')goTo(Math.min(curPg+1,TOTAL-1));
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp')goTo(Math.max(curPg-1,0));
+});
+
+/* ─── LOADER ─── */
+window.addEventListener('load',()=>setTimeout(()=>{document.getElementById('loader').classList.add('out');boot();},2200));
+
+/* ─── BG CANVAS ─── */
+function initBg(){
+  const cv=document.getElementById('bgc'),ctx=cv.getContext('2d');let W,H;
+  function r(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}r();window.addEventListener('resize',r);
+  const st=Array.from({length:220},()=>({x:Math.random(),y:Math.random(),s:.3+Math.random()*1.2,o:Math.random(),sp:.0002+Math.random()*.0003}));
+  const sh=[];function addSh(){if(sh.length<2)sh.push({x:Math.random()*W,y:Math.random()*H*.4,vx:3+Math.random()*5,vy:1.5+Math.random()*2,len:80+Math.random()*100,life:1});setTimeout(addSh,4000+Math.random()*5000);}addSh();
+  let t=0;
+  function fr(){
+    ctx.clearRect(0,0,W,H);
+    // grid
+    for(let x=0;x<W;x+=55){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.strokeStyle='rgba(0,212,255,.016)';ctx.lineWidth=.5;ctx.stroke();}
+    for(let y=0;y<H;y+=55){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.strokeStyle='rgba(0,212,255,.016)';ctx.lineWidth=.5;ctx.stroke();}
+    // nebula
+    [[.1,.25,'0,212,255'],[.85,.6,'168,85,247'],[.5,.9,'249,115,22']].forEach(([bx,by,rgb])=>{
+      const g=ctx.createRadialGradient(bx*W,by*H,0,bx*W,by*H,320);g.addColorStop(0,`rgba(${rgb},.018)`);g.addColorStop(1,'transparent');
+      ctx.fillStyle=g;ctx.beginPath();ctx.arc(bx*W,by*H,320,0,Math.PI*2);ctx.fill();
+    });
+    st.forEach(s=>{s.o+=s.sp;if(s.o>1||s.o<0)s.sp*=-1;ctx.beginPath();ctx.arc(s.x*W,s.y*H,s.s,0,Math.PI*2);ctx.fillStyle=`rgba(200,220,255,${s.o*.65})`;ctx.fill();});
+    for(let i=sh.length-1;i>=0;i--){const s=sh[i];const spd=Math.sqrt(s.vx*s.vx+s.vy*s.vy);const g=ctx.createLinearGradient(s.x-s.vx*(s.len/spd),s.y-s.vy*(s.len/spd),s.x,s.y);g.addColorStop(0,'transparent');g.addColorStop(1,`rgba(0,212,255,${s.life*.6})`);ctx.beginPath();ctx.moveTo(s.x-s.vx*(s.len/spd),s.y-s.vy*(s.len/spd));ctx.lineTo(s.x,s.y);ctx.strokeStyle=g;ctx.lineWidth=1.2;ctx.stroke();s.x+=s.vx;s.y+=s.vy;s.life-=.013;if(s.life<=0||s.x>W)sh.splice(i,1);}
+    t+=.004;requestAnimationFrame(fr);
+  }fr();
+}
+
+/* ─── HERO HUD ─── */
+function initHud(){
+  const cv=document.getElementById('hudCv');if(!cv)return;
+  const ctx=cv.getContext('2d');const W=520,H=520;let t=0;
+  const skills=[{l:'AI AGENT',v:.9},{l:'AUTOMATION',v:.88},{l:'CLOUD',v:.8},{l:'PYTHON',v:.92},{l:'NLP',v:.85},{l:'DATA',v:.76}];
+  function fr(){
+    ctx.clearRect(0,0,W,H);const cx=W/2,cy=H/2;
+    // rings
+    [190,155,120,85,50].forEach((r,i)=>{ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle=`rgba(0,212,255,${.055-i*.01})`;ctx.lineWidth=.5;ctx.stroke();});
+    // rotating arcs
+    for(let i=0;i<3;i++){const sa=t*(1+i*.3)+i*2.09;ctx.beginPath();ctx.arc(cx,cy,188-i*4,sa,sa+.35+i*.08);ctx.strokeStyle=[`rgba(0,212,255,.65)`,`rgba(168,85,247,.5)`,`rgba(249,115,22,.4)`][i];ctx.lineWidth=2-i*.3;ctx.stroke();}
+    // skill radial bars
+    skills.forEach((d,i)=>{
+      const a=-Math.PI/2+(i/skills.length)*Math.PI*2;const r=140;
+      const dx=cx+Math.cos(a)*r,dy=cy+Math.sin(a)*r;
+      ctx.beginPath();ctx.arc(dx,dy,3,0,Math.PI*2);ctx.fillStyle='rgba(0,212,255,.9)';ctx.fill();
+      const bl=d.v*50;const ex=cx+Math.cos(a)*(r+bl),ey=cy+Math.sin(a)*(r+bl);
+      ctx.beginPath();ctx.moveTo(dx,dy);ctx.lineTo(ex,ey);ctx.strokeStyle='rgba(0,212,255,.35)';ctx.lineWidth=1.5;ctx.stroke();
+      const lx=cx+Math.cos(a)*(r+bl+18),ly=cy+Math.sin(a)*(r+bl+18);
+      ctx.font='9px "Share Tech Mono"';ctx.fillStyle='rgba(0,212,255,.65)';ctx.textAlign='center';ctx.fillText(d.l,lx,ly);
+    });
+    // hex dots
+    for(let hx=cx-175;hx<cx+175;hx+=22)for(let hy=cy-175;hy<cy+175;hy+=19){
+      const dd=Math.sqrt((hx-cx)**2+(hy-cy)**2);if(dd>180||dd<65)continue;
+      ctx.beginPath();ctx.arc(hx+(hy%2)*11,hy,1,0,Math.PI*2);ctx.fillStyle=`rgba(0,212,255,${.03+.06*Math.sin(dd*.03-t*1.5)})`;ctx.fill();
+    }
+    // scanner
+    const pulse=.5+.5*Math.sin(t*2);const sa=t*.8;
+    ctx.save();ctx.translate(cx,cy);const sg=ctx.createLinearGradient(0,0,Math.cos(sa)*195,Math.sin(sa)*195);
+    sg.addColorStop(0,`rgba(0,212,255,${.12*pulse})`);sg.addColorStop(1,'transparent');
+    ctx.fillStyle=sg;ctx.beginPath();ctx.moveTo(0,0);ctx.arc(0,0,195,sa-Math.PI*.2,sa);ctx.closePath();ctx.fill();ctx.restore();
+    // core glow
+    const g=ctx.createRadialGradient(cx,cy,0,cx,cy,55);g.addColorStop(0,`rgba(0,212,255,${.15*pulse})`);g.addColorStop(1,'transparent');
+    ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,55,0,Math.PI*2);ctx.fill();
+    ctx.beginPath();ctx.arc(cx,cy,5,0,Math.PI*2);ctx.fillStyle=`rgba(0,212,255,${.6+.4*pulse})`;ctx.fill();
+    // status text
+    ctx.font='9px "Share Tech Mono"';ctx.fillStyle='rgba(0,212,255,.45)';ctx.textAlign='left';
+    ctx.fillText('SYS: ONLINE',cx-185,cy-8);ctx.fillText(`T:${(t*10).toFixed(1)}s`,cx-185,cy+8);ctx.fillText('UNIT_001',cx-185,cy+24);
+    t+=.012;requestAnimationFrame(fr);
+  }fr();
+}
+
+/* ─── RADAR ─── */
+function initRadar(){
+  const cv=document.getElementById('radarCv');if(!cv)return;
+  const ctx=cv.getContext('2d');const S=380;let t=0;
+  const cats=['AI/ML','PYTHON','CLOUD','SECURITY','DATA ENG','AUTOMATION'];
+  const vals=[.9,.92,.8,.7,.76,.88];
+  function fr(){
+    ctx.clearRect(0,0,S,S);const cx=S/2,cy=S/2,r=140,n=cats.length;
+    [.25,.5,.75,1].forEach(sc=>{
+      ctx.beginPath();cats.forEach((_,i)=>{const a=-Math.PI/2+(i/n)*Math.PI*2;const x=cx+Math.cos(a)*r*sc,y=cy+Math.sin(a)*r*sc;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+      ctx.closePath();ctx.strokeStyle=`rgba(0,212,255,${.07+sc*.04})`;ctx.lineWidth=.5;ctx.stroke();
+    });
+    cats.forEach((_,i)=>{const a=-Math.PI/2+(i/n)*Math.PI*2;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r);ctx.strokeStyle='rgba(0,212,255,.08)';ctx.lineWidth=.5;ctx.stroke();});
+    const av=vals.map((v,i)=>v*(1-.04*Math.sin(t*.5+i*.6)));
+    ctx.beginPath();av.forEach((v,i)=>{const a=-Math.PI/2+(i/n)*Math.PI*2;const x=cx+Math.cos(a)*r*v,y=cy+Math.sin(a)*r*v;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.closePath();ctx.fillStyle='rgba(0,212,255,.07)';ctx.fill();ctx.strokeStyle='rgba(0,212,255,.55)';ctx.lineWidth=1.5;ctx.stroke();
+    av.forEach((v,i)=>{const a=-Math.PI/2+(i/n)*Math.PI*2;const x=cx+Math.cos(a)*r*v,y=cy+Math.sin(a)*r*v;ctx.beginPath();ctx.arc(x,y,4,0,Math.PI*2);ctx.fillStyle='rgba(0,212,255,.9)';ctx.fill();
+    const lx=cx+Math.cos(a)*(r+22),ly=cy+Math.sin(a)*(r+22);ctx.font='bold 9px "Share Tech Mono"';ctx.fillStyle='rgba(0,212,255,.75)';ctx.textAlign='center';ctx.fillText(cats[i],lx,ly);});
+    ctx.beginPath();ctx.arc(cx,cy,4,0,Math.PI*2);ctx.fillStyle='rgba(0,212,255,.5)';ctx.fill();
+    t+=.007;requestAnimationFrame(fr);
+  }fr();
+}
+
+/* ─── SKILL BARS ─── */
+function triggerBars(){
+  document.querySelectorAll('.sb-fill').forEach(b=>{b.style.width=b.dataset.w+'%';});
+}
+
+/* ─── PROJECT CARD VISUALS ─── */
+function initProjCards(){
+  document.querySelectorAll('.pc-cv').forEach(cv=>{
+    const ctx=cv.getContext('2d');let t=0;
+    const W=cv.parentElement.offsetWidth||300,H=190;cv.width=W;cv.height=H;
+    const type=cv.dataset.vis;
+    const D={
+      proptech:()=>{
+        ctx.clearRect(0,0,W,H);ctx.fillStyle='#020409';ctx.fillRect(0,0,W,H);
+        // Holographic city skyline
+        const cols=8;
+        for(let i=0;i<cols;i++){
+          const bw=(W-40)/cols*.65;const bx=20+i*(W-40)/cols;
+          const bh=30+70*Math.abs(Math.sin(i*1.3+t*.3));
+          const by=H*.85-bh;
+          const a=.1+.15*Math.sin(i*.8+t);
+          ctx.strokeStyle=`rgba(0,212,255,${a})`;ctx.lineWidth=1;ctx.strokeRect(bx,by,bw,bh);
+          // windows
+          for(let wy=by+5;wy<H*.82;wy+=10){for(let wx=bx+4;wx<bx+bw-2;wx+=8){
+            if(Math.sin(wx+wy+t*2)>.4){ctx.fillStyle=`rgba(0,212,255,${.3+.3*Math.sin(wx+t)})`;ctx.fillRect(wx,wy,4,5);}
+          }}
+        }
+        // Ground grid
+        for(let gx=0;gx<W;gx+=20){ctx.beginPath();ctx.moveTo(gx,H*.85);ctx.lineTo(W/2,H);ctx.strokeStyle='rgba(0,212,255,.04)';ctx.lineWidth=.5;ctx.stroke();}
+        ctx.beginPath();ctx.moveTo(0,H*.85);ctx.lineTo(W,H*.85);ctx.strokeStyle='rgba(0,212,255,.15)';ctx.lineWidth=1;ctx.stroke();
+        // scan
+        const sy=H*.1+(H*.7)*((t*.25)%1);ctx.beginPath();ctx.moveTo(0,sy);ctx.lineTo(W,sy);ctx.strokeStyle='rgba(0,212,255,.2)';ctx.lineWidth=1;ctx.stroke();
+      },
+      cocktail:()=>{
+        ctx.clearRect(0,0,W,H);ctx.fillStyle='#020409';ctx.fillRect(0,0,W,H);
+        const cx=W/2,cy=H/2;
+        // Rotating molecular structure
+        const nodes=[{x:0,y:0},{x:60,y:0},{x:-60,y:0},{x:0,y:60},{x:0,y:-60},{x:40,y:40},{x:-40,y:-40}];
+        const edges=[[0,1],[0,2],[0,3],[0,4],[0,5],[0,6],[1,5],[2,6]];
+        const rn=nodes.map(n=>({
+          x:cx+n.x*Math.cos(t*.5)-n.y*Math.sin(t*.5)*.6,
+          y:cy+n.x*Math.sin(t*.5)*.4+n.y*Math.cos(t*.5)
+        }));
+        edges.forEach(([a,b])=>{ctx.beginPath();ctx.moveTo(rn[a].x,rn[a].y);ctx.lineTo(rn[b].x,rn[b].y);ctx.strokeStyle='rgba(168,85,247,.3)';ctx.lineWidth=1;ctx.stroke();});
+        rn.forEach((n,i)=>{ctx.beginPath();ctx.arc(n.x,n.y,i===0?7:4,0,Math.PI*2);ctx.fillStyle=i===0?'rgba(168,85,247,.9)':'rgba(168,85,247,.5)';ctx.fill();});
+        ctx.font='10px "Share Tech Mono"';ctx.fillStyle='rgba(168,85,247,.4)';ctx.textAlign='center';ctx.fillText('MOLECULE SIM',W/2,H*.9);
+      },
+      aiflow:()=>{
+        ctx.clearRect(0,0,W,H);ctx.fillStyle='#020409';ctx.fillRect(0,0,W,H);
+        const nodes=[{x:.1,y:.5,l:'INPUT'},{x:.35,y:.25,l:'N8N'},{x:.35,y:.75,l:'GROQ'},{x:.65,y:.5,l:'API'},{x:.9,y:.5,l:'OUTPUT'}];
+        const edges=[[0,1],[0,2],[1,3],[2,3],[3,4]];
+        if(!cv._p)cv._p=edges.map(e=>({e,v:(Math.random())}));
+        cv._p.forEach(p=>{p.v+=.008;if(p.v>1)p.v=0;});
+        // Draw edges
+        edges.forEach(([a,b])=>{const g2=ctx.createLinearGradient(nodes[a].x*W,nodes[a].y*H,nodes[b].x*W,nodes[b].y*H);g2.addColorStop(0,'rgba(0,212,255,.05)');g2.addColorStop(1,'rgba(0,212,255,.15)');ctx.beginPath();ctx.moveTo(nodes[a].x*W,nodes[a].y*H);ctx.lineTo(nodes[b].x*W,nodes[b].y*H);ctx.strokeStyle=g2;ctx.lineWidth=1;ctx.stroke();});
+        // Packets
+        cv._p.forEach(pk=>{const[a,b]=pk.e;const x=nodes[a].x*W+(nodes[b].x-nodes[a].x)*W*pk.v;const y=nodes[a].y*H+(nodes[b].y-nodes[a].y)*H*pk.v;ctx.beginPath();ctx.arc(x,y,3.5,0,Math.PI*2);ctx.fillStyle='rgba(0,212,255,.9)';ctx.fill();ctx.beginPath();ctx.arc(x,y,7,0,Math.PI*2);ctx.fillStyle='rgba(0,212,255,.15)';ctx.fill();});
+        // Nodes
+        nodes.forEach(n=>{ctx.strokeStyle='rgba(0,212,255,.5)';ctx.lineWidth=1;const nw=n.l.length*7+10;ctx.strokeRect(n.x*W-nw/2,n.y*H-10,nw,20);ctx.font='8px "Share Tech Mono"';ctx.fillStyle='rgba(0,212,255,.8)';ctx.textAlign='center';ctx.fillText(n.l,n.x*W,n.y*H+4);});
+      },
+      publish:()=>{
+        ctx.clearRect(0,0,W,H);ctx.fillStyle='#020409';ctx.fillRect(0,0,W,H);
+        // Document with scan
+        const docW=W*.65,docH=H*.75,docX=(W-docW)/2,docY=H*.12;
+        ctx.strokeStyle='rgba(0,212,255,.2)';ctx.lineWidth=1;ctx.strokeRect(docX,docY,docW,docH);
+        // Text lines
+        [.22,.32,.42,.52,.62,.72,.82].forEach((yf,i)=>{const lw=(i%3===2?.4:.65)*docW;ctx.fillStyle=`rgba(0,212,255,${.08+.05*Math.sin(t+i)})`;ctx.fillRect(docX+10,yf*H,lw,3);});
+        // Scan line
+        const sy=docY+(docH*((t*.3)%1));if(sy<docY+docH){ctx.beginPath();ctx.moveTo(docX,sy);ctx.lineTo(docX+docW,sy);ctx.strokeStyle='rgba(0,212,255,.3)';ctx.lineWidth=1;ctx.stroke();}
+        ctx.font='9px "Share Tech Mono"';ctx.fillStyle='rgba(0,212,255,.4)';ctx.textAlign='center';ctx.fillText('CONTENT ENGINE',W/2,H*.95);
+      },
+      logistics:()=>{
+        ctx.clearRect(0,0,W,H);ctx.fillStyle='#020409';ctx.fillRect(0,0,W,H);
+        // Globe outline
+        const cx=W/2,cy=H/2,r=65;
+        ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='rgba(0,212,255,.12)';ctx.lineWidth=.8;ctx.stroke();
+        // Latitude lines
+        [-40,-20,0,20,40].forEach(lat=>{const ry=r*Math.cos(lat*Math.PI/180);const ay=cy+r*Math.sin(lat*Math.PI/180);ctx.beginPath();ctx.ellipse(cx,ay,ry,ry*.3,0,0,Math.PI*2);ctx.strokeStyle='rgba(0,212,255,.06)';ctx.lineWidth=.5;ctx.stroke();});
+        // Longitude lines
+        for(let i=0;i<4;i++){ctx.beginPath();ctx.ellipse(cx,cy,r*.25,r,i*Math.PI/4+t*.2,0,Math.PI*2);ctx.strokeStyle='rgba(0,212,255,.07)';ctx.lineWidth=.5;ctx.stroke();}
+        // Route
+        const rp=((t*.3)%1);const route=[{x:.15,y:.4},{x:.35,y:.3},{x:.5,y:.45},{x:.65,y:.35},{x:.85,y:.5}];
+        route.forEach((p,i)=>{if(i<route.length-1){ctx.beginPath();ctx.moveTo(p.x*W,p.y*H);ctx.lineTo(route[i+1].x*W,route[i+1].y*H);ctx.strokeStyle='rgba(0,212,255,.15)';ctx.lineWidth=1;ctx.stroke();}ctx.beginPath();ctx.arc(p.x*W,p.y*H,3,0,Math.PI*2);ctx.fillStyle='rgba(0,212,255,.4)';ctx.fill();});
+        // Ship
+        const si=Math.floor(rp*(route.length-1));const sf=(rp*(route.length-1))%1;if(si<route.length-1){const sp=route[si],ep=route[si+1];const sx=sp.x*W+(ep.x-sp.x)*W*sf,sy2=sp.y*H+(ep.y-sp.y)*H*sf;ctx.beginPath();ctx.arc(sx,sy2,5,0,Math.PI*2);ctx.fillStyle='rgba(0,255,136,.9)';ctx.fill();ctx.beginPath();ctx.arc(sx,sy2,10,0,Math.PI*2);ctx.fillStyle='rgba(0,255,136,.15)';ctx.fill();}
+      },
+      startup:()=>{
+        ctx.clearRect(0,0,W,H);ctx.fillStyle='#020409';ctx.fillRect(0,0,W,H);
+        const pts=[];const n=14;
+        for(let i=0;i<n;i++)pts.push({x:15+i*(W-30)/(n-1),y:H*.75-i*(H*.55/(n-1))*(0.7+.3*Math.sin(i*.8+t*.5))});
+        // Fill
+        ctx.beginPath();ctx.moveTo(pts[0].x,H*.85);pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.lineTo(pts[n-1].x,H*.85);ctx.closePath();ctx.fillStyle='rgba(0,255,136,.04)';ctx.fill();
+        // Line
+        ctx.beginPath();pts.forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));ctx.strokeStyle='rgba(0,255,136,.6)';ctx.lineWidth=1.8;ctx.stroke();
+        // Points
+        pts.forEach((p,i)=>{if(i%3===0){ctx.beginPath();ctx.arc(p.x,p.y,3,0,Math.PI*2);ctx.fillStyle='rgba(0,255,136,.9)';ctx.fill();}});
+        // Bar chart bg
+        for(let i=0;i<6;i++){const bh=(20+i*12)*(.8+.2*Math.sin(i+t));const bx=15+i*(W-30)/6;ctx.fillStyle=`rgba(0,255,136,.04)`;ctx.fillRect(bx,H*.75-bh,18,bh);}
+        ctx.font='9px "Share Tech Mono"';ctx.fillStyle='rgba(0,255,136,.4)';ctx.textAlign='center';ctx.fillText('GROWTH ENGINE',W/2,H*.92);
+      }
+    };
+    function loop(){D[type]&&D[type]();t+=.016;requestAnimationFrame(loop);}loop();
+  });
+}
+
+/* ─── EDU WAVE ─── */
+function initEduWaves(){
+  document.querySelectorAll('.edu-wv').forEach(cv=>{
+    const ctx=cv.getContext('2d');const W=cv.parentElement.offsetWidth||300,H=50;cv.width=W;let t=0;
+    const col=cv.dataset.t==='c1'?'0,212,255':'168,85,247';
+    function fr(){ctx.clearRect(0,0,W,H);for(let i=0;i<3;i++){ctx.beginPath();for(let x=0;x<=W;x++){const y=H/2+Math.sin(x*.025+t+i*.7)*(8-i*2.5);x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.strokeStyle=`rgba(${col},${.4-i*.12})`;ctx.lineWidth=1.2-i*.3;ctx.stroke();}t+=.02;requestAnimationFrame(fr);}fr();
+  });
+}
+
+/* ─── CONTACT HUD ─── */
+function initCtcHud(){
+  const cv=document.getElementById('ctcCv');if(!cv)return;
+  const ctx=cv.getContext('2d');let t=0;
+  function resize(){cv.width=cv.parentElement.offsetWidth;cv.height=cv.parentElement.offsetHeight;}resize();window.addEventListener('resize',resize);
+  function fr(){ctx.clearRect(0,0,cv.width,cv.height);const cx=cv.width/2,cy=cv.height/2;
+    for(let i=0;i<4;i++)for(let r=40;r<350;r+=30){const a=t*(0.18+i*.07)+r*.012+i*1.57;const x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r*.5;const al=(1-r/350)*.06;ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fillStyle=[`rgba(0,212,255,${al})`,`rgba(168,85,247,${al})`,`rgba(249,115,22,${al})`,`rgba(0,255,136,${al})`][i];ctx.fill();}
+    t+=.005;requestAnimationFrame(fr);}fr();
+}
+
+/* ─── BOOT ─── */
+function boot(){initBg();initHud();initRadar();initProjCards();initEduWaves();initCtcHud();}
+</script>
+</body>
+</html>
